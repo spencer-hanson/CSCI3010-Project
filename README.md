@@ -4,7 +4,7 @@
 None yet
 
 ## Dependencies
-None yet
+<a href="https://github.com/spencer-hanson/dict-plus">dict-plus</a>
 
 ## How to run
 run with `python main.py`

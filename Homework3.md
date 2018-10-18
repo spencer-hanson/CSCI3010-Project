@@ -25,8 +25,7 @@
     - sub
 
 ##  What was actually accomplished
-Everything was completed except
-- Convert dict-plus tests to test-suite format
+Everything!
 
 This was because
 ## What is planned for the next deadline
@@ -57,3 +56,6 @@ This was because
 
 ### Basic Gui Working
 <img src="images/hw3_gui.png" />
+
+### Travis CI test suite integration
+<img src="images/hw3_travis.png" />
