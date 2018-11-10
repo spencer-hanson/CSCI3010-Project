@@ -59,6 +59,7 @@ class ICSParser(object):
     COMMANDS = [
         ImageCommand(NewImage, "newimage", [ImageArg("width", int), ImageArg("height", int)]),
         ImageCommand(SaveImage, "saveimage", [ImageArg("name", str)]),
+        ImageCommand(LoadImage, "loadimage", [ImageArg("filename", str)]),
         ImageCommand(FlipX, "flipx"),
         ImageCommand(FlipY, "flipy"),
         ImageCommand(ColorShift, "colorshift", [ImageArg("color", RGB)]),

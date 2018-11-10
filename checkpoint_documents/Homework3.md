@@ -27,7 +27,6 @@
 ##  What was actually accomplished
 Everything!
 
-This was because
 ## What is planned for the next deadline
 - Following editing features, along with ICS (Image Creation Syntax) equivalents 
     - Circle
