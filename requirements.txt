@@ -1,3 +1,2 @@
-tkinter
 pillow
 dict_plus

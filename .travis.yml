@@ -4,4 +4,5 @@ python:
 script:
   - pip install -e .
   - pip install -r requirements.txt
+  - apt-get install python3-tk
   - cd tests && pytest
