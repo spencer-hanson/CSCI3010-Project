@@ -1,4 +1,4 @@
-from src import ICSParser
+from ics import ICSParser
 from editor import Window
 
 import argparse

@@ -1,3 +1,4 @@
 loadimage ok.png
-colorshift 128,0,128 30
+colorshift 0,255,0 30
+# rotate 50,50 135
 saveimage test.png
