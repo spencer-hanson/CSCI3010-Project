@@ -15,7 +15,7 @@ class ImageArg(object):
         self.arg_type = arg_type
 
     def __str__(self):
-        return "ImageArg({name}, {typ})".format(name=self.name, typ=self.arg_type.__name__)
+        return "{name}[{typ}]".format(name=self.name, typ=self.arg_type.__name__)
 
     def process(self, value):
         return self.arg_type(value)
@@ -23,10 +23,10 @@ class ImageArg(object):
     def validate(self, value):
         try:
             self.process(value)
-        except ValueError:
-            return False
+        except ValueError as e:
+            return False, e
         else:
-            return True
+            return True, None
 
 
 class ImageCommand(object):
@@ -43,10 +43,17 @@ class ImageCommand(object):
         arg_dict = {}
 
         for i in range(0, len(self.args)):
-            if not self.args[i].validate(args[i]):
+            if i >= len(args):
+                raise ICSValidationException("Error processing command '{cmd}' not enough arguments given!\n"
+                                             "Expected {expect}".format(cmd=command,
+                                                                        expect=str([str(arg) for arg in self.args[i:]]))
+                                             )
+            valid, error = self.args[i].validate(args[i])
+            if not valid:
                 raise ICSValidationException("Error processing command '{cmd}' with args '{args}' Arg '{arg}' invalid! "
-                                             "Expected {expect}".format(cmd=command, args=args,
-                                                                        arg=args[i], expect=str(self.args[i]))
+                                             "Expected {expect} \n {err}".format(cmd=command, args=args,
+                                                                                 arg=args[i], expect=str(self.args[i]),
+                                                                                 err=str(error))
                                              )
             arg_dict[self.args[i].name] = self.args[i].process(args[i])
         return Action(self.clss, arg_dict)
@@ -57,13 +64,14 @@ class ImageCommand(object):
 
 class ICSParser(object):
     COMMANDS = [
+        ImageCommand(DumpRaw, "dumpraw"),
         ImageCommand(NewImage, "newimage", [ImageArg("width", int), ImageArg("height", int)]),
         ImageCommand(SaveImage, "saveimage", [ImageArg("name", str)]),
         ImageCommand(LoadImage, "loadimage", [ImageArg("filename", str)]),
         ImageCommand(FlipX, "flipx"),
         ImageCommand(FlipY, "flipy"),
-        ImageCommand(ColorShift, "colorshift", [ImageArg("color", RGB)]),
-        ImageCommand(Rotate, "rotate", [ImageArg("deg", float)]),
+        ImageCommand(ColorShift, "colorshift", [ImageArg("color", RGB), ImageArg("saturation", Percent)]),
+        ImageCommand(Rotate, "rotate", [ImageArg("center", Point), ImageArg("degrees", float)]),
         ImageCommand(Circle, "circle", [ImageArg("thickness", int), ImageArg("color", RGB), ImageArg("point", Point)]),
         ImageCommand(Line, "line", [ImageArg("thickness", int), ImageArg("color", RGB),
                                     ImageArg("point1", Point), ImageArg("point2", Point)])
@@ -83,7 +91,7 @@ class ICSParser(object):
     def parse(self):
         action_plan = ActionPlan()
         for line in self.data:
-            if line.startswith("#"):  # Skip lines that start with a '#' it's a comment
+            if line.startswith("#") or not line.strip():  # Skip lines that start with a '#' it's a comment
                 continue
             line = line.strip()
             line = line.lower()

@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw
-from dict_plus import DictPlus
+from editor.math import RGB, Point, LossyDictPlus
 
 
 class Tool(object):
@@ -12,7 +12,7 @@ class LoadImage(Tool):
         self.filename = filename
 
     def execute(self, win_canvas):
-        win_canvas.data_canvas = DictPlus()
+        win_canvas.data_canvas = LossyDictPlus()
         win_canvas.img_fn = Image.open(self.filename)
         win_canvas.img_canvas = ImageDraw.Draw(win_canvas.img_fn)
         width, height = win_canvas.img_fn.size
@@ -27,7 +27,7 @@ class NewImage(Tool):
         self.height = height
 
     def execute(self, win_canvas):
-        win_canvas.data_canvas = DictPlus()
+        win_canvas.data_canvas = LossyDictPlus()
         pixels = [(x, y) for x in range(0, self.width) for y in range(0, self.height)]
         for pixel in pixels:
             win_canvas.data_canvas[pixel] = (255, 255, 255)
@@ -62,8 +62,8 @@ class Circle(Tool):
     def execute(self, win_canvas):
         for x in range(-self.thickness, self.thickness):
             for y in range(-self.thickness, self.thickness):
-                if x**2 + y**2 < self.thickness**2:
-                    win_canvas.data_canvas[(self.point.x+x, self.point.y+y)] = self.color.to_tuple()
+                if x ** 2 + y ** 2 < self.thickness ** 2:
+                    win_canvas.data_canvas[(self.point.x + x, self.point.y + y)] = self.color.to_tuple()
 
 
 class Line(Tool):
@@ -80,8 +80,8 @@ class Line(Tool):
         # 2: [(0,0),(1,0),(0,1),(1,1)]
         # etc..
         points = []
-        for i in range(0, size**2):
-            diff = (i//size, i % size)
+        for i in range(0, size ** 2):
+            diff = (i // size, i % size)
             points.append(diff)
         return points
 
@@ -92,7 +92,7 @@ class Line(Tool):
         elif mx == 0:
             start = min(self.point1.y, self.point2.y)
             end = max(self.point1.y, self.point2.y)
-            points = zip([self.point1.x]*abs(end-start), range(start, end))
+            points = zip([self.point1.x] * abs(end - start), range(start, end))
         elif my == 0:
             start = min(self.point1.x, self.point2.x)
             end = max(self.point1.x, self.point2.x)
@@ -106,45 +106,71 @@ class Line(Tool):
         point_square = self.get_point_square(self.thickness)
         for point in points:
             for point_sq in point_square:
-                win_canvas.data_canvas[(int(point[0]+point_sq[0]), int(point[1]+point_sq[1]))] = self.color.to_tuple()
+                win_canvas.data_canvas[
+                    (int(point[0] + point_sq[0]), int(point[1] + point_sq[1]))] = self.color.to_tuple()
 
 
-class Transforms(Tool):
-    def __init__(self):
-        pass
-
-    def execute(self, win_canvas):
-        raise NotImplementedError  # TODO Implement Transforms
-
-
-class FlipX(Transforms):
+class FlipX(Tool):
     def __init__(self):
         super(FlipX, self).__init__()
         pass
 
     def execute(self, win_canvas):
-        raise NotImplementedError  # TODO Implement FlipX
+        width, _ = win_canvas.img_fn.size
+
+        def flipx(k, v):
+            w1, h1 = k
+            return (width - w1 - 1, h1), v
+
+        win_canvas.data_canvas.map(flipx)  # A simple mapping to flip x
 
 
-class FlipY(Transforms):
+class DumpRaw(Tool):
+    def execute(self, win_canvas):
+        print(str(win_canvas.data_canvas))
+
+
+class FlipY(Tool):
     def __init__(self):
         super(FlipY, self).__init__()
 
     def execute(self, win_canvas):
-        raise NotImplementedError  # TODO Implement FlipY
+        _, height = win_canvas.img_fn.size
+
+        def flipy(k, v):
+            w1, h1 = k
+            return (w1, height - h1 - 1), v
+
+        win_canvas.data_canvas.map(flipy)
 
 
-class ColorShift(Transforms):
-    def __init__(self, color):
-        super(ColorShift, self).__init__()
+class ColorShift(Tool):
+    def __init__(self, color, saturation):
+        self.color = color
+        self.saturation = saturation
 
     def execute(self, win_canvas):
-        raise NotImplementedError  # TODO Implement Colorshift
+        def colorize(k, v):
+            return k, RGB("", data=v).colorize(self.color, self.saturation.value).to_tuple()
+        win_canvas.data_canvas.map(colorize)
 
 
-class Rotate(Transforms):
-    def __init__(self, rotate):
-        super(Rotate, self).__init__()
+class Rotate(Tool):
+    def __init__(self, center, degrees):
+        self.center = center
+        self.degrees = degrees
 
     def execute(self, win_canvas):
-        raise NotImplementedError # TODO Implement Rotate
+        width, height = win_canvas.img_fn.size
+        def rotate(k):
+            return Point(None, data=k).rotate(self.center, self.degrees).to_tuple()
+
+        def clean(k, v):
+            x, y = k
+            if x < 0 or x > width:
+                return False
+            elif y < 0 or y > height:
+                return False
+            return True
+        win_canvas.data_canvas.rekey(rotate)
+        win_canvas.data_canvas.filter(clean)

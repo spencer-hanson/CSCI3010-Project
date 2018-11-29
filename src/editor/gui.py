@@ -52,10 +52,9 @@ class WindowCanvas(object):
                                     state="normal")
 
     def update_img(self):
-        tw = 2
         for p in self.data_canvas:
             self.img_canvas.point(p, self.data_canvas[p])
-            if self.data_canvas[p] != (255, 255, 255):  # TODO Update dict to hooked, add "version control"
+            if self.data_canvas[p] != (255, 255, 255):  # TODO Update dict to hooked, add "version control"?
                 self.tk_canvas_img.put('#%02x%02x%02x' % self.data_canvas[p], p)
             # self.tk_canvas.create_oval(p, p, fill='#%02x%02x%02x' % self.data_canvas[p])
 
