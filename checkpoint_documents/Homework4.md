@@ -44,10 +44,10 @@ along with adding a 'New Image' button
 
 ## Screenshots
 ### More documentation
-<img src="images/hw4_docs.png" />
+<img src="images/hw4_docs.PNG" />
 
 ### Image Editor Features
-<img src="images/hw3_screencap.gif" />
+<img src="images/hw4_screencap.gif" />
 
 ### ICS Making
-<img src="images/hw4_ics.gif" />
+<img src="images/hw4_ics.PNG" />
