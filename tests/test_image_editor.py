@@ -1,15 +1,22 @@
+import sys
+import os
+path = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, path + '/../src')
+sys.path.insert(0, path + '/../src/editor')
+
 from ics import ICSParser
 from editor.gui import Window
 
 
 TESTS = [
-    "test_circle.ics",
-    "test_colorize.ics",
-    "test_flipx.ics",
-    "test_flipy.ics",
-    "test_line.ics",
-    "test_rotate.ics"
+    "tests/test_circle.ics",
+    "tests/test_colorize.ics",
+    "tests/test_flipx.ics",
+    "tests/test_flipy.ics",
+    "tests/test_line.ics",
+    "tests/test_rotate.ics"
 ]
+
 
 def test_image_editor():
     for test in TESTS:
@@ -19,4 +26,3 @@ def test_image_editor():
 
     print("All tests passed!")
 
-test_image_editor()

@@ -1,8 +1,8 @@
 # Author: Spencer Hanson
 # Image Creation Syntax Parser
-from editor.tools import *
-from editor.gui import Action, ActionPlan
+from editor import Action, ActionPlan
 from editor.math import *
+from editor.tools import *
 
 
 class ICSValidationException(Exception):

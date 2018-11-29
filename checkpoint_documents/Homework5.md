@@ -7,14 +7,6 @@
     - fold_right
     - compare
     - lt, gt, gte, lte, eq, neq
-- Implementation of the following subclasses (with examples)
-    - HookedDictPlus
-    - OneWayDictPlus
-    - SerializableDictPlus
-    - ImmutableDictPlus
-    - UniqueDictPlus
-    - FunctionallyOrderedDictPlus
-    - TwoWayDictPlus
 - Test suite integration using ICS, all currently implemented features
 - Test suite integration with GitHub (travis-ci)
 - Following editing features, along with ICS (Image Creation Script) equivalents 
@@ -22,6 +14,20 @@
     - FlipY
     - Rotate
     - ColorShift
+Will need to write scripts in ICS for each subclass implementation
+    - CaseInsensitiveDict
+    - PrefixInsensitiveDict
+    - SuffixInsensitiveDict
+    - FunctionalInsensitiveDict
+    - FunctionDictPlus
+    - FunctionallyOrderedDictPlus
+    - TwoWayDictPlus
+    - HookedDictPlus
+    - OneWayDictPlus
+    - SerializableDictPlus
+    - ImmutableDictPlus
+    - UniqueDictPlus
+
 
 ***Note: The following are included for the next checkpoint as well***
     
@@ -45,26 +51,18 @@
     - fold_right
     - compare
     - lt, gt, gte, lte, eq, neq
-
-Will need to write scripts in ICS for each subclass implementation
-    - CaseInsensitiveDict
-    - PrefixInsensitiveDict
-    - SuffixInsensitiveDict
-    - FunctionalInsensitiveDict
-    - FunctionDictPlus
-    - FunctionallyOrderedDictPlus
-    - TwoWayDictPlus
+- Implementation of the following subclasses (with examples)
     - HookedDictPlus
     - OneWayDictPlus
     - SerializableDictPlus
     - ImmutableDictPlus
     - UniqueDictPlus
+    - FunctionallyOrderedDictPlus
+    - TwoWayDictPlus
 
 
 ##  What was actually accomplished
-Everything, with some minor hiccups:
-- Test Image Editor suite can't run on travis, since you can't install tkinter on their workers without paying (it's a gui library)
-
+Everything
 
 ## What is planned for the next deadline
 Nothing! Finished all requirements in preparation for finals.

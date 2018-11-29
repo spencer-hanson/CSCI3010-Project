@@ -1,9 +1,6 @@
 import tkinter
 from tkinter import Canvas, PhotoImage
 from tkinter import filedialog
-from dict_plus import DictPlus
-from PIL import Image, ImageDraw
-from editor.tools import *
 from editor.math import Point, RGB, Percent
 
 

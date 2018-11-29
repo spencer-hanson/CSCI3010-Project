@@ -1,5 +1,5 @@
-from ics import ICSParser
-from editor.gui import Window
+from src import ICSParser
+from editor import Window
 
 import argparse
 
