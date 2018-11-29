@@ -3,4 +3,5 @@ python:
   - "3.6"
 script:
   - pip install -e .
+  - pip install -r requirements.txt
   - cd tests && pytest

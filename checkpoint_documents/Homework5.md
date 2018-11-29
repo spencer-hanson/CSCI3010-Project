@@ -22,7 +22,7 @@
     - FlipY
     - Rotate
     - ColorShift
-    
+
 ***Note: The following are included for the next checkpoint as well***
     
 - Will need to write scripts for each function
@@ -62,9 +62,17 @@ Will need to write scripts in ICS for each subclass implementation
 
 
 ##  What was actually accomplished
-Everything!
+Everything, with some minor hiccups:
+- Test Image Editor suite can't run on travis, since you can't install tkinter on their workers without paying (it's a gui library)
+
 
 ## What is planned for the next deadline
 Nothing! Finished all requirements in preparation for finals.
 
 ## Screenshots
+### Testing Succeeds on localhost, fails on travis (see above)
+<img src="images/hw5_tkinterfail.PNG" />
+<img src="images/hw5_testsuccess.PNG" />
+
+### Transforms in the GUI
+<img src="images/hw5_transforms.gif" />

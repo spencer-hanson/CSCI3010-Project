@@ -4,7 +4,7 @@ from tkinter import filedialog
 from dict_plus import DictPlus
 from PIL import Image, ImageDraw
 from editor.tools import *
-from editor.math import Point, RGB
+from editor.math import Point, RGB, Percent
 
 
 class Window(object):
@@ -51,10 +51,10 @@ class WindowCanvas(object):
         self.tk_canvas.create_image((WindowCanvas.WIDTH / 2, WindowCanvas.HEIGHT / 2), image=self.tk_canvas_img,
                                     state="normal")
 
-    def update_img(self):
+    def update_img(self, full=False):
         for p in self.data_canvas:
             self.img_canvas.point(p, self.data_canvas[p])
-            if self.data_canvas[p] != (255, 255, 255):  # TODO Update dict to hooked, add "version control"?
+            if self.data_canvas[p] != (255, 255, 255) or full:  # TODO Update dict to hooked, add "version control"?
                 self.tk_canvas_img.put('#%02x%02x%02x' % self.data_canvas[p], p)
             # self.tk_canvas.create_oval(p, p, fill='#%02x%02x%02x' % self.data_canvas[p])
 
@@ -152,6 +152,23 @@ class ToolBox(object):
             self.paintbrush()
         self.win_canvas.tk_canvas.bind("<Button-1>", self.do_line_paint)
 
+    def do_flipx(self):
+        FlipX().execute(self.win_canvas)
+        self.win_canvas.update_img(full=True)
+
+    def do_flipy(self):
+        FlipY().execute(self.win_canvas)
+        self.win_canvas.update_img(full=True)
+
+    def do_colorize(self):
+        ColorShift(RGB("", data=(0, 255, 0)), Percent("", data=50)).execute(self.win_canvas)
+        self.win_canvas.update_img(full=True)
+
+    def do_rotate(self):
+        width, height = self.win_canvas.img_fn.size
+        Rotate(Point("", data=(width/2, height/2)), 90).execute(self.win_canvas)
+        self.win_canvas.update_img(full=True)
+
     def setup(self):
         self.gui = tkinter.Toplevel(self.root)
         self.gui.geometry("{}x{}".format(ToolBox.WIDTH, ToolBox.HEIGHT))
@@ -172,6 +189,10 @@ class ToolBox(object):
         tkinter.Button(frame, text="Save", command=self.save_to_file).pack()
         tkinter.Button(frame, text="New Image", command=self.new_image).pack()
         tkinter.Button(frame, text="Load Image", command=self.load_image).pack()
+        tkinter.Button(frame, text="Flip X", command=self.do_flipx).pack()
+        tkinter.Button(frame, text="Flip Y", command=self.do_flipy).pack()
+        tkinter.Button(frame, text="Colorize", command=self.do_colorize).pack()
+        tkinter.Button(frame, text="Rotate 90", command=self.do_rotate).pack()
         frame.pack(fill=tkinter.X, padx=5, pady=5)
 
 
