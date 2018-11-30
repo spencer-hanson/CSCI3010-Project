@@ -48,7 +48,7 @@ Nothing! Finished all requirements in preparation for finals.
 
 ## Screenshots
 ### Testing Succeeds on localhost, fails on travis (see above)
-<img src="images/hw5_tkinterfail.png" />
+<img src="images/hw5_tkinterfail.PNG" />
 <img src="images/hw5_testsuccess.PNG" />
 
 ### Transforms in the GUI
