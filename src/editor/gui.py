@@ -2,6 +2,8 @@ import tkinter
 from tkinter import Canvas, PhotoImage
 from tkinter import filedialog
 from editor.math import Point, RGB, Percent
+from editor.tools import *
+from PIL import ImageTk
 
 
 class Window(object):
@@ -18,7 +20,7 @@ class Window(object):
 
     def do_action(self, action):
         tool = action.get_instance()
-        tool.execute(self.win_canvas)  # Execute the tool
+        return tool.execute(self.win_canvas)  # Execute the tool
 
 
 class WindowCanvas(object):
@@ -29,9 +31,9 @@ class WindowCanvas(object):
         self.gui = gui
         self.tk_canvas = Canvas(gui)
         self.tk_canvas_img = PhotoImage(width=WindowCanvas.WIDTH, height=WindowCanvas.HEIGHT)
-        self.img_canvas = None
-        self.data_canvas = None
-        self.img_fn = None
+        self.img_canvas = None  # ImageDraw.Draw(win_canvas.img_fn)
+        self.data_canvas = None  # LossyDictPlus()
+        self.img_fn = None  # Image.open(self.filename)
 
     def setup(self):
         self.gui.geometry("{}x{}".format(WindowCanvas.WIDTH, WindowCanvas.HEIGHT))
@@ -43,6 +45,7 @@ class WindowCanvas(object):
         # self.img_canvas = ImageDraw.Draw(self.img_fn)
         # self.data_canvas = DictPlus()
         NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self)
+
         self.tk_canvas.create_rectangle(0, 0, WindowCanvas.WIDTH, WindowCanvas.HEIGHT, fill="#fff")
         self.tk_canvas.pack(fill='both', expand=True)
         self.tk_canvas.create_image((WindowCanvas.WIDTH / 2, WindowCanvas.HEIGHT / 2), image=self.tk_canvas_img,
@@ -51,10 +54,27 @@ class WindowCanvas(object):
     def update_img(self, full=False):
         for p in self.data_canvas:
             self.img_canvas.point(p, self.data_canvas[p])
-            if self.data_canvas[p] != (255, 255, 255) or full:  # TODO Update dict to hooked, add "version control"?
-                self.tk_canvas_img.put('#%02x%02x%02x' % self.data_canvas[p], p)
-            # self.tk_canvas.create_oval(p, p, fill='#%02x%02x%02x' % self.data_canvas[p])
 
+        self.tk_canvas_img = ImageTk.PhotoImage(self.img_fn)
+        self.tk_canvas.create_image((WindowCanvas.WIDTH / 2, WindowCanvas.HEIGHT / 2),
+                                    image=self.tk_canvas_img, state="normal")
+
+        tw = 2
+        # if self.data_canvas[p] != (255, 255, 255) or full:  # TODO Update dict to hooked, add "version control"?
+        #     self.tk_canvas_img.put('#%02x%02x%02x' % self.data_canvas[p], p)
+        # self.tk_canvas.create_oval(p, p, fill='#%02x%02x%02x' % self.data_canvas[p])
+
+
+# from Tkinter import *
+# import Image, ImageTk
+# root = Tk()
+# root.geometry('1000x1000')
+# canvas = Canvas(root,width=999,height=999)
+# canvas.pack()
+# pilImage = Image.open("ball.gif")
+# image = ImageTk.PhotoImage(pilImage)
+# imagesprite = canvas.create_image(400,400,image=image)
+# root.mainloop()
 
 class ToolBox(object):
     WIDTH = 300
@@ -80,7 +100,9 @@ class ToolBox(object):
         for point in point_sq:
             new_point = (int(event.x + point[0]), int(event.y + point[1]))
             self.win_canvas.data_canvas[new_point] = ToolBox.COLOR
-            self.win_canvas.tk_canvas_img.put("#%02x%02x%02x" % ToolBox.COLOR, new_point)
+
+            self.win_canvas.tk_canvas.create_rectangle(new_point[0], new_point[1], new_point[0]+1, new_point[1]+1,
+                                                       fill="#%02x%02x%02x" % ToolBox.COLOR)
 
     def do_circle_paint(self, event):
         Circle(ToolBox.BRUSH_SIZE, RGB("", data=ToolBox.COLOR),
@@ -163,7 +185,7 @@ class ToolBox(object):
 
     def do_rotate(self):
         width, height = self.win_canvas.img_fn.size
-        Rotate(Point("", data=(width/2, height/2)), 90).execute(self.win_canvas)
+        Rotate(Point("", data=(width / 2, height / 2)), 90).execute(self.win_canvas)
         self.win_canvas.update_img(full=True)
 
     def setup(self):
@@ -191,6 +213,7 @@ class ToolBox(object):
         tkinter.Button(frame, text="Colorize", command=self.do_colorize).pack()
         tkinter.Button(frame, text="Rotate 90", command=self.do_rotate).pack()
         frame.pack(fill=tkinter.X, padx=5, pady=5)
+        frame.update()
 
 
 class Action(object):

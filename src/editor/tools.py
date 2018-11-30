@@ -47,10 +47,11 @@ class SaveImage(Tool):
 
 class Pencil(Tool):
     def __init__(self, color, point):
-        pass
+        self.color = color
+        self.point = point
 
     def execute(self, win_canvas):
-        raise NotImplementedError  # TODO Implement Pencil
+        win_canvas.data_canvas[self.point.to_tuple()] = self.color.to_tuple()
 
 
 class Circle(Tool):
@@ -128,6 +129,7 @@ class FlipX(Tool):
 class DumpRaw(Tool):
     def execute(self, win_canvas):
         print(str(win_canvas.data_canvas))
+        return win_canvas.data_canvas
 
 
 class FlipY(Tool):
