@@ -16,7 +16,7 @@
     - ColorShift
 
 ***Note: The following are included for the next checkpoint as well***
-    
+- All documentation set up on readthedocs.com
 - Will need to write scripts for each function
     - squish
     - expand
