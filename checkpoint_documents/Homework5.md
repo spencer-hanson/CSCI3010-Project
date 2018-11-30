@@ -14,20 +14,6 @@
     - FlipY
     - Rotate
     - ColorShift
-Will need to write scripts in ICS for each subclass implementation
-    - CaseInsensitiveDict
-    - PrefixInsensitiveDict
-    - SuffixInsensitiveDict
-    - FunctionalInsensitiveDict
-    - FunctionDictPlus
-    - FunctionallyOrderedDictPlus
-    - TwoWayDictPlus
-    - HookedDictPlus
-    - OneWayDictPlus
-    - SerializableDictPlus
-    - ImmutableDictPlus
-    - UniqueDictPlus
-
 
 ***Note: The following are included for the next checkpoint as well***
     
@@ -51,14 +37,6 @@ Will need to write scripts in ICS for each subclass implementation
     - fold_right
     - compare
     - lt, gt, gte, lte, eq, neq
-- Implementation of the following subclasses (with examples)
-    - HookedDictPlus
-    - OneWayDictPlus
-    - SerializableDictPlus
-    - ImmutableDictPlus
-    - UniqueDictPlus
-    - FunctionallyOrderedDictPlus
-    - TwoWayDictPlus
 
 
 ##  What was actually accomplished
@@ -81,3 +59,6 @@ Nothing! Finished all requirements in preparation for finals.
 
 ### Code Examples added
 <img src="images/hw5_code_examples.png" />
+
+### Documentation uploaded to readthedocs
+https://dict-plus.readthedocs.io/en/latest/
