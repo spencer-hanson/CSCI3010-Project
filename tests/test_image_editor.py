@@ -20,7 +20,7 @@ TESTS = {
 
 def test_image_editor():
     for test in TESTS.keys():
-        window = Window()
+        window = Window(console=True)
         actions = ICSParser(test).parse()
         results = [window.do_action(action) for action in actions]
         assert str(results[-1]) == TESTS[test]
