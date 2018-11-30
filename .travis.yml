@@ -3,5 +3,5 @@ python:
   - "3.6"
 script:
   - pip install -r requirements.txt
-  - apt-get install python3-tk
+  - sudo apt-get install python3-tk
   - pytest tests/
