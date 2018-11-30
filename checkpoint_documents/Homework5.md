@@ -62,7 +62,8 @@ Will need to write scripts in ICS for each subclass implementation
 
 
 ##  What was actually accomplished
-Everything
+Everything, but the tasks for the subclasses was changed to optimize the program with PIL loading,
+automated travis tests and test cases
 
 ## What is planned for the next deadline
 Nothing! Finished all requirements in preparation for finals.

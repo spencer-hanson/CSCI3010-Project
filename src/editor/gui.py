@@ -7,8 +7,8 @@ from PIL import ImageTk
 
 
 class Window(object):
-    def __init__(self):
-        self.root = tkinter.Tk()
+    def __init__(self, console=False):
+        self.root = tkinter.Tk() if not console else None
 
         self.win_canvas = WindowCanvas(self.root)
         self.toolbox = ToolBox(self.root, self.win_canvas)

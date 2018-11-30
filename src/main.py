@@ -8,11 +8,12 @@ parser.add_argument("--file", type=str, nargs=1, default=None)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    window = Window()  # Create a Canvas instance, but don't show it
     if args.file:
+        window = Window(console=True)  # Create a Canvas instance, but don't show it
         # Don't start gui, read file
         actions = ICSParser(args.file[0]).parse()
         results = [window.do_action(action) for action in actions]
     else:
+        window = Window()  # Create a Canvas instance, but don't show it
         window.show()
 
