@@ -9,6 +9,9 @@ All **planned** features added, **bonus** features:
 - Brush size easier to changee
 - Fix 'new image' bug (wouldn't clear last buffer)
 - Reorganize UI
+- Optimized brushes and brush selection system
+- Expanded test suite
+
 ##  What was actually accomplished
 Everything!
 
