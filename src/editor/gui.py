@@ -179,13 +179,13 @@ class ToolBox(object):
         if color[0]:
             ColorShift(RGB("", data=(round(color[0][0]), round(color[0][1]), round(color[0][2]))),
                        Percent("", data=self.saturation.get())).execute(self.win_canvas)
-            self.win_canvas.update_img(full=True)
+            self.win_canvas.update_img()
 
     def do_rotate(self):
         # Execute the rotation transform, rotating the entire image
         width, height = self.win_canvas.img_fn.size
         Rotate(Point("", data=(width / 2, height / 2)), self.rotation.get()).execute(self.win_canvas)
-        self.win_canvas.update_img(full=True)
+        self.win_canvas.update_img()
 
     def do_colorpick(self):
         # Open a colorpicker to change the brush color
@@ -257,7 +257,7 @@ class ToolBox(object):
         # Rotate Transform
         inner_frame = tkinter.Frame(frame)
         tkinter.Button(inner_frame, text="Rotate", command=self.do_rotate).pack(side=tkinter.LEFT)
-        self.rotation = tkinter.Scale(inner_frame, from_=1, to=259, orient=tkinter.HORIZONTAL)
+        self.rotation = tkinter.Scale(inner_frame, from_=-360, to=360, orient=tkinter.HORIZONTAL)
         self.rotation.set(90)
         self.rotation.pack(side=tkinter.RIGHT)
         inner_frame.pack()

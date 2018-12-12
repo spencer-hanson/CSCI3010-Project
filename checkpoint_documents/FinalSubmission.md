@@ -11,6 +11,7 @@ All **planned** features added, **bonus** features:
 - Reorganize UI
 - Optimized brushes and brush selection system
 - Expanded test suite
+- Fully commented code, functions and structure
 
 ##  What was actually accomplished
 Everything!
