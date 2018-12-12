@@ -3,5 +3,5 @@ python:
   - "3.6"
 script:
   - pip install -r requirements.txt
-  - sudo apt-get install python3-tk
-  - pytest tests/
+  - sudo apt-get install python3-tk xvfb
+  - xvfb-run pytest tests/
