@@ -1,13 +1,14 @@
 # Homework 5 (Final Checkpoint 1)
 
 ## Planned features to implement
-All planned features added, bonus features:
-- color wheel
-- choose what to colorshift
-- make colorize pickable
-- make rotation pick
-- fix travis
-
+All **planned** features added, **bonus** features:
+- Pick brush color with color wheel
+- Make Colorize color and saturation pickable
+- Make Rotation pickable
+- Fix Travis with xvfb (screen virtualization library)
+- Brush size easier to changee
+- Fix 'new image' bug (wouldn't clear last buffer)
+- Reorganize UI
 ##  What was actually accomplished
 Everything!
 
@@ -15,3 +16,5 @@ Everything!
 Nothing, final deadline!
 
 ## Screenshots
+### Travis Fixed!
+<img src="images/hw6_travisworks.PNG" />

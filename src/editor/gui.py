@@ -4,6 +4,7 @@ from tkinter import filedialog
 from editor.math import Point, RGB, Percent
 from editor.tools import *
 from PIL import ImageTk
+from tkinter.colorchooser import askcolor
 
 
 class Window(object):
@@ -41,15 +42,8 @@ class WindowCanvas(object):
                                           int(self.gui.winfo_screenheight() / 2 - WindowCanvas.HEIGHT / 2)))
         self.gui.title("Image Editor")
 
-        # self.img_fn = Image.new("RGB", (200, 200), (255, 255, 255))
-        # self.img_canvas = ImageDraw.Draw(self.img_fn)
-        # self.data_canvas = DictPlus()
         NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self)
 
-        self.tk_canvas.create_rectangle(0, 0, WindowCanvas.WIDTH, WindowCanvas.HEIGHT, fill="#fff")
-        self.tk_canvas.pack(fill='both', expand=True)
-        self.tk_canvas.create_image((WindowCanvas.WIDTH / 2, WindowCanvas.HEIGHT / 2), image=self.tk_canvas_img,
-                                    state="normal")
 
     def update_img(self, full=False):
         for p in self.data_canvas:
@@ -57,7 +51,7 @@ class WindowCanvas(object):
 
         self.tk_canvas_img = ImageTk.PhotoImage(self.img_fn)
         self.tk_canvas.create_image((WindowCanvas.WIDTH / 2, WindowCanvas.HEIGHT / 2),
-                                    image=self.tk_canvas_img, state="normal")
+                                    image=self.tk_canvas_img, state=tkinter.DISABLED)
 
         tw = 2
         # if self.data_canvas[p] != (255, 255, 255) or full:  # TODO Update dict to hooked, add "version control"?
@@ -79,7 +73,6 @@ class WindowCanvas(object):
 class ToolBox(object):
     WIDTH = 300
     HEIGHT = WindowCanvas.HEIGHT
-    BRUSH_SIZE = 1
     COLOR = (0, 0, 0)
 
     def __init__(self, root, win_canvas):
@@ -90,32 +83,40 @@ class ToolBox(object):
         self.brush_txt = tkinter.StringVar()
         self.brush_txt.set("Paintbrush (Off)")
 
-        self.brush_size = tkinter.StringVar()
-        self.brush_size.set(str(ToolBox.BRUSH_SIZE))
-
-        self.line_pt = None
+        self.line_pt = None  # First clicked point for line tool
+        self.saturation = None  # Scale for colorize saturation
+        self.brush_size = None  # Scale for brush size
+        self.rotation = None    # Scale for rotation
+        self.rot_center = None  # Entry for rotation center
 
     def do_point_paint(self, event):
-        point_sq = Line.get_point_square(ToolBox.BRUSH_SIZE)
+        point_sq = Line.get_point_square(self.brush_size.get())
         for point in point_sq:
             new_point = (int(event.x + point[0]), int(event.y + point[1]))
             self.win_canvas.data_canvas[new_point] = ToolBox.COLOR
 
             self.win_canvas.tk_canvas.create_rectangle(new_point[0], new_point[1], new_point[0]+1, new_point[1]+1,
-                                                       fill="#%02x%02x%02x" % ToolBox.COLOR)
+                                                       outline="#%02x%02x%02x" % ToolBox.COLOR,
+                                                       fill="#%02x%02x%02x" % ToolBox.COLOR,
+                                                       state=tkinter.DISABLED)
 
     def do_circle_paint(self, event):
-        Circle(ToolBox.BRUSH_SIZE, RGB("", data=ToolBox.COLOR),
+        Circle(self.brush_size.get(), RGB("", data=ToolBox.COLOR),
                Point("", data=(event.x, event.y))).execute(self.win_canvas)
-        self.win_canvas.tk_canvas.create_oval(event.x - ToolBox.BRUSH_SIZE, event.y - ToolBox.BRUSH_SIZE,
-                                              event.x + ToolBox.BRUSH_SIZE, event.y + ToolBox.BRUSH_SIZE,
-                                              fill="#%02x%02x%02x" % ToolBox.COLOR)
+        self.win_canvas.tk_canvas.create_oval(event.x - self.brush_size.get(), event.y - self.brush_size.get(),
+                                              event.x + self.brush_size.get(), event.y + self.brush_size.get(),
+                                              outline="#%02x%02x%02x" % ToolBox.COLOR,
+                                              fill="#%02x%02x%02x" % ToolBox.COLOR,
+                                              state=tkinter.DISABLED)
 
     def do_line_paint(self, event):
         if self.line_pt:
             self.win_canvas.tk_canvas.create_line(self.line_pt[0], self.line_pt[1], event.x, event.y,
-                                                  fill="#%02x%02x%02x" % ToolBox.COLOR, width=ToolBox.BRUSH_SIZE)
-            Line(ToolBox.BRUSH_SIZE, RGB("", data=ToolBox.COLOR), Point("", data=self.line_pt),
+                                                  fill="#%02x%02x%02x" % ToolBox.COLOR,
+                                                  width=self.brush_size.get(),
+                                                  state=tkinter.DISABLED)
+
+            Line(self.brush_size.get(), RGB("", data=ToolBox.COLOR), Point("", data=self.line_pt),
                  Point("", data=(event.x, event.y))).execute(self.win_canvas)
             self.line_pt = None
         else:
@@ -136,18 +137,8 @@ class ToolBox(object):
             self.win_canvas.update_img()
 
     def new_image(self):
-        NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self)
+        NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self.win_canvas)
         self.win_canvas.tk_canvas.create_rectangle(0, 0, WindowCanvas.WIDTH, WindowCanvas.HEIGHT, fill="#fff")
-
-    def up_brushsize(self):
-        ToolBox.BRUSH_SIZE += 1
-        self.brush_size.set(str(ToolBox.BRUSH_SIZE))
-
-    def down_brushsize(self):
-        if ToolBox.BRUSH_SIZE - 1 <= 0:
-            return
-        ToolBox.BRUSH_SIZE -= 1
-        self.brush_size.set(str(ToolBox.BRUSH_SIZE))
 
     def paintbrush(self):
         self.brush_on = not self.brush_on
@@ -180,13 +171,21 @@ class ToolBox(object):
         self.win_canvas.update_img(full=True)
 
     def do_colorize(self):
-        ColorShift(RGB("", data=(0, 255, 0)), Percent("", data=50)).execute(self.win_canvas)
-        self.win_canvas.update_img(full=True)
+        color = askcolor()
+        if color[0]:
+            ColorShift(RGB("", data=(round(color[0][0]), round(color[0][1]), round(color[0][2]))),
+                       Percent("", data=self.saturation.get())).execute(self.win_canvas)
+            self.win_canvas.update_img(full=True)
 
     def do_rotate(self):
         width, height = self.win_canvas.img_fn.size
-        Rotate(Point("", data=(width / 2, height / 2)), 90).execute(self.win_canvas)
+        Rotate(Point("", data=(width / 2, height / 2)), self.rotation.get()).execute(self.win_canvas)
         self.win_canvas.update_img(full=True)
+
+    def do_colorpick(self):
+        color = askcolor()
+        if color[0]:
+            ToolBox.COLOR = (round(color[0][0]), round(color[0][1]), round(color[0][2]))
 
     def setup(self):
         self.gui = tkinter.Toplevel(self.root)
@@ -197,21 +196,45 @@ class ToolBox(object):
         self.gui.title("ToolBox")
 
         frame = tkinter.Frame(self.gui, height=2, bd=1, relief=tkinter.SUNKEN)
-        tkinter.Button(frame, command=self.paintbrush, textvariable=self.brush_txt).pack()
+
         inner_frame = tkinter.Frame(frame)
-        tkinter.Button(inner_frame, text="Brush Size Up", command=self.up_brushsize).pack(side=tkinter.RIGHT)
-        tkinter.Button(inner_frame, text="Brush Size Down", command=self.down_brushsize).pack(side=tkinter.LEFT)
-        tkinter.Label(inner_frame, text=str(self.brush_size), textvariable=self.brush_size).pack(side=tkinter.RIGHT)
+        tkinter.Button(inner_frame, command=self.paintbrush, textvariable=self.brush_txt).pack(side=tkinter.LEFT)
+        tkinter.Button(inner_frame, text="Circle", command=self.draw_circle).pack(side=tkinter.LEFT)
+        tkinter.Button(inner_frame, text="Line", command=self.draw_line).pack(side=tkinter.RIGHT)
         inner_frame.pack()
-        tkinter.Button(frame, text="Circle", command=self.draw_circle).pack()
-        tkinter.Button(frame, text="Line", command=self.draw_line).pack()
-        tkinter.Button(frame, text="Save", command=self.save_to_file).pack()
-        tkinter.Button(frame, text="New Image", command=self.new_image).pack()
-        tkinter.Button(frame, text="Load Image", command=self.load_image).pack()
-        tkinter.Button(frame, text="Flip X", command=self.do_flipx).pack()
-        tkinter.Button(frame, text="Flip Y", command=self.do_flipy).pack()
-        tkinter.Button(frame, text="Colorize", command=self.do_colorize).pack()
-        tkinter.Button(frame, text="Rotate 90", command=self.do_rotate).pack()
+
+        inner_frame = tkinter.Frame(frame)
+        tkinter.Label(inner_frame, text=str("Brush Size"), textvariable=self.brush_size).pack(side=tkinter.LEFT)
+        self.brush_size = tkinter.Scale(inner_frame, from_=1, to=20, orient=tkinter.HORIZONTAL)
+        self.brush_size.pack(side=tkinter.RIGHT)
+        inner_frame.pack()
+
+        inner_frame = tkinter.Frame(frame)
+        tkinter.Button(inner_frame, text="Save", command=self.save_to_file).pack(side=tkinter.LEFT)
+        tkinter.Button(inner_frame, text="New Image", command=self.new_image).pack(side=tkinter.RIGHT)
+        tkinter.Button(inner_frame, text="Load Image", command=self.load_image).pack(side=tkinter.RIGHT)
+        inner_frame.pack()
+
+        inner_frame = tkinter.Frame(frame)
+        tkinter.Button(inner_frame, text="Flip X", command=self.do_flipx).pack(side=tkinter.LEFT)
+        tkinter.Button(inner_frame, text="Flip Y", command=self.do_flipy).pack(side=tkinter.RIGHT)
+        inner_frame.pack()
+
+        inner_frame = tkinter.Frame(frame)
+        tkinter.Button(inner_frame, text="Colorize", command=self.do_colorize).pack(side=tkinter.LEFT)
+        tkinter.Label(inner_frame, text=str("Saturation (%)"), textvariable=self.brush_size).pack(side=tkinter.LEFT)
+        self.saturation = tkinter.Scale(inner_frame, from_=1, to=99, orient=tkinter.HORIZONTAL)
+        self.saturation.pack(side=tkinter.RIGHT)
+        inner_frame.pack()
+
+        inner_frame = tkinter.Frame(frame)
+        tkinter.Button(inner_frame, text="Rotate", command=self.do_rotate).pack(side=tkinter.LEFT)
+        self.rotation = tkinter.Scale(inner_frame, from_=1, to=259, orient=tkinter.HORIZONTAL)
+        self.rotation.set(90)
+        self.rotation.pack(side=tkinter.RIGHT)
+        inner_frame.pack()
+
+        tkinter.Button(frame, text="Pick Color", command=self.do_colorpick).pack()
         frame.pack(fill=tkinter.X, padx=5, pady=5)
         frame.update()
 

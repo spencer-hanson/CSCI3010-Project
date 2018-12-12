@@ -33,6 +33,9 @@ class NewImage(Tool):
             win_canvas.data_canvas[pixel] = (255, 255, 255)
         win_canvas.img_fn = Image.new("RGB", (self.width, self.height), (255, 255, 255))
         win_canvas.img_canvas = ImageDraw.Draw(win_canvas.img_fn)
+        win_canvas.tk_canvas.create_rectangle(0, 0, self.width, self.height, fill="#ffffff", outline="#ffffff", state="disabled")
+        win_canvas.tk_canvas.pack(fill='both', expand=True)
+        win_canvas.tk_canvas.create_image((self.width / 2, self.height / 2), image=win_canvas.tk_canvas_img, state="disabled")
 
 
 class SaveImage(Tool):
