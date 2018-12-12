@@ -9,6 +9,7 @@ from tkinter.colorchooser import askcolor
 
 
 class Window(object):
+    # Window object is main gui controller, having a window canvas and toolbox
     def __init__(self, console=False):
         # Only init if we're not in console mode
         self.root = tkinter.Tk() if not console else None
@@ -17,23 +18,26 @@ class Window(object):
         self.toolbox = ToolBox(self.root, self.win_canvas)
 
     def show(self):
+        # Show the gui, this is not called from console mode
         self.win_canvas.setup()
         self.toolbox.setup()
         self.root.mainloop()
 
     def do_action(self, action):
+        # Run a given action on the window's canvas
         tool = action.get_instance()
         return tool.execute(self.win_canvas)  # Execute the tool
 
 
 class WindowCanvas(object):
+    # Window canvas object that does the drawing
     WIDTH = 500
     HEIGHT = 600
 
     def __init__(self, gui):
-        self.gui = gui
-        self.tk_canvas = Canvas(gui)
-        self.tk_canvas_img = PhotoImage(width=WindowCanvas.WIDTH, height=WindowCanvas.HEIGHT)
+        self.gui = gui  # Handle to parent gui object
+        self.tk_canvas = Canvas(gui)  # Creates a new canvas window
+        self.tk_canvas_img = PhotoImage(width=WindowCanvas.WIDTH, height=WindowCanvas.HEIGHT)  # Drawable image for tkinter
         self.img_canvas = None  # Imagedraw canvas: ImageDraw.Draw(win_canvas.img_fn)
         self.data_canvas = None  # Data canvas: LossyDictPlus()
         self.img_fn = None  # Image file handle: Image.open(self.filename)
@@ -48,6 +52,7 @@ class WindowCanvas(object):
         NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self)
 
     def update_img(self):
+        # Update the visible canvas with changes to the data canvas
         for p in self.data_canvas:
             self.img_canvas.point(p, self.data_canvas[p])
 
@@ -58,6 +63,7 @@ class WindowCanvas(object):
 
 
 class ToolBox(object):
+    # Toolbox for all the operations in the image editor
     WIDTH = 300
     HEIGHT = WindowCanvas.HEIGHT
     COLOR = (0, 0, 0)
@@ -75,6 +81,7 @@ class ToolBox(object):
         self.rot_center = None  # Entry for rotation center
 
     def do_square_paint(self, event):
+        # Paint a square
         point_sq = Line.get_point_square(self.brush_size.get())
         self.win_canvas.tk_canvas.create_rectangle(event.x, event.y,
                                                    event.x + self.brush_size.get(),
@@ -87,6 +94,7 @@ class ToolBox(object):
             self.win_canvas.data_canvas[new_point] = ToolBox.COLOR
 
     def do_circle_paint(self, event):
+        # Paint a circle
         Circle(self.brush_size.get(), RGB("", data=ToolBox.COLOR),
                Point("", data=(event.x, event.y))).execute(self.win_canvas)
         self.win_canvas.tk_canvas.create_oval(event.x - self.brush_size.get(), event.y - self.brush_size.get(),
@@ -96,6 +104,7 @@ class ToolBox(object):
                                               state=tkinter.DISABLED)
 
     def do_line_paint(self, event):
+        # Paint a line
         if self.line_pt:
             self.win_canvas.tk_canvas.create_line(self.line_pt[0], self.line_pt[1], event.x, event.y,
                                                   fill="#%02x%02x%02x" % ToolBox.COLOR,
@@ -109,6 +118,7 @@ class ToolBox(object):
             self.line_pt = event.x, event.y
 
     def save_to_file(self):
+        # Save image to file
         fn = filedialog.asksaveasfilename(initialdir="/", title="Select file",
                                           filetypes=(("png files", "*.png"),))
         if fn:
@@ -117,20 +127,24 @@ class ToolBox(object):
             SaveImage(fn).execute(self.win_canvas)
 
     def load_image(self):
+        # Load a file, overwrite current image
         fn = filedialog.askopenfilename(initialdir="/", title="Select file", filetypes=(("png files", "*.png"),))
         if fn:
             LoadImage(fn).execute(self.win_canvas)
             self.win_canvas.update_img()
 
     def new_image(self):
+        # Create a new image, wipes away canvas
         NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self.win_canvas)
         self.win_canvas.tk_canvas.create_rectangle(0, 0, WindowCanvas.WIDTH, WindowCanvas.HEIGHT, fill="#fff")
 
     def _enable_brushes(self):
+        # After switching brushes, re-enable the buttons
         for k in self.brush_btns:
             self.brush_btns[k].config(state=tkinter.NORMAL)
 
     def _rebind_brush(self, brush_name, func, binding_type="<B1-Motion>"):
+        # Bind the brush to the mouse movement
         self._enable_brushes()
         self.brush_btns[brush_name].config(state=tkinter.DISABLED)
         self.win_canvas.tk_canvas.unbind("<Button-1>")
@@ -138,23 +152,29 @@ class ToolBox(object):
         self.win_canvas.tk_canvas.bind(binding_type, func)
 
     def draw_square(self):
+        # Do the bindings for the square brush
         self._rebind_brush("square", self.do_square_paint)
 
     def draw_circle(self):
+        # Do the bindings for the circle brush
         self._rebind_brush("circle", self.do_circle_paint)
 
     def draw_line(self):
+        # Do the bindings for the line brush
         self._rebind_brush("line", self.do_line_paint, binding_type="<Button-1>")
 
     def do_flipx(self):
+        # Execute the FlipX transform
         FlipX().execute(self.win_canvas)
         self.win_canvas.update_img()
 
     def do_flipy(self):
+        # Execute the FlipY transform
         FlipY().execute(self.win_canvas)
         self.win_canvas.update_img()
 
     def do_colorize(self):
+        # Execute the colorize transform, after asking what color to shift to
         color = askcolor()
         if color[0]:
             ColorShift(RGB("", data=(round(color[0][0]), round(color[0][1]), round(color[0][2]))),
@@ -162,14 +182,23 @@ class ToolBox(object):
             self.win_canvas.update_img(full=True)
 
     def do_rotate(self):
+        # Execute the rotation transform, rotating the entire image
         width, height = self.win_canvas.img_fn.size
         Rotate(Point("", data=(width / 2, height / 2)), self.rotation.get()).execute(self.win_canvas)
         self.win_canvas.update_img(full=True)
 
     def do_colorpick(self):
+        # Open a colorpicker to change the brush color
+        def format_color(val):  # Needed for mac, as color picker returns 1-256 instead of 0-255
+            val = round(val)
+            if val > 255:
+                return 255
+            elif val < 0:
+                val = 0
+            return val
         color = askcolor()
         if color[0]:
-            ToolBox.COLOR = (round(color[0][0]), round(color[0][1]), round(color[0][2]))
+            ToolBox.COLOR = (format_color(color[0][0]), format_color(color[0][1]), format_color(color[0][2]))
 
     def setup(self):
         # Basic separate window gui setup, set size, location, and title
@@ -241,6 +270,7 @@ class ToolBox(object):
 
 
 class Action(object):
+    # Action object that contains a tool to run
     def __init__(self, class_obj, kwargs):
         self.class_obj = class_obj
         self.kwargs = kwargs
@@ -253,6 +283,7 @@ class Action(object):
 
 
 class ActionPlan(object):
+    # List of actions
     def __init__(self):
         self.actions = []
 

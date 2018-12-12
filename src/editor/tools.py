@@ -3,11 +3,13 @@ from editor.math import RGB, Point, LossyDictPlus
 
 
 class Tool(object):
+    # Superclass of the tool to require subclasses to implement execute()
     def execute(self, win_canvas):
         raise NotImplementedError
 
 
 class LoadImage(Tool):
+    # Load an image given a filename
     def __init__(self, filename):
         self.filename = filename
 
@@ -22,6 +24,7 @@ class LoadImage(Tool):
 
 
 class NewImage(Tool):
+    # Create a new image, given a width and height
     def __init__(self, width, height):
         self.width = width
         self.height = height
@@ -39,6 +42,7 @@ class NewImage(Tool):
 
 
 class SaveImage(Tool):
+    # Save an Image given a filename
     def __init__(self, name):
         self.name = name
 
@@ -49,6 +53,7 @@ class SaveImage(Tool):
 
 
 class Pencil(Tool):
+    # Draw a point with a given color
     def __init__(self, color, point):
         self.color = color
         self.point = point
@@ -58,6 +63,7 @@ class Pencil(Tool):
 
 
 class Circle(Tool):
+    # Draw a circle with thickness (radius), color and center point
     def __init__(self, thickness, color, point):
         self.thickness = thickness
         self.color = color
@@ -71,6 +77,7 @@ class Circle(Tool):
 
 
 class Line(Tool):
+    # Draw a line with a thickness and color from point1 to point2
     def __init__(self, thickness, color, point1, point2):
         self.thickness = thickness
         self.color = color
@@ -80,6 +87,7 @@ class Line(Tool):
     @staticmethod
     def get_point_square(size):
         # Get a square of points like
+        # To create the given thickness/size
         # 1: [(0,,0)]
         # 2: [(0,0),(1,0),(0,1),(1,1)]
         # etc..
@@ -90,35 +98,40 @@ class Line(Tool):
         return points
 
     def execute(self, win_canvas):
-        my, mx = self.point1.slope_to(self.point2)
-        if mx == 0 and my == 0:
-            points = [(self.point1.x, self.point1.y)]
-        elif mx == 0:
+        my, mx = self.point1.slope_to(self.point2)  # Get slope to other point
+        if mx == 0 and my == 0:  # If it's the same point
+            points = [(self.point1.x, self.point1.y)]   # List of points
+        elif mx == 0:  # If it's a horizontal line
             start = min(self.point1.y, self.point2.y)
             end = max(self.point1.y, self.point2.y)
-            points = zip([self.point1.x] * abs(end - start), range(start, end))
-        elif my == 0:
+            points = zip([self.point1.x] * abs(end - start), range(start, end))  # List of points
+        elif my == 0:  # If it's a vertical line
             start = min(self.point1.x, self.point2.x)
             end = max(self.point1.x, self.point2.x)
-            points = zip(range(start, end), [self.point1.y] * abs(end - start))
-        else:
+            points = zip(range(start, end), [self.point1.y] * abs(end - start))  # List of points
+        else:  # Otherwise it's a regular line
             start = min(self.point1.x, self.point2.x)
             end = max(self.point1.x, self.point2.x)
-            f = lambda x: (my / mx) * (x - self.point1.x) + self.point1.y
-            points = [(x, f(x)) for x in range(start, end)]
+            f = lambda x: (my / mx) * (x - self.point1.x) + self.point1.y  # Function of the line between the points
+            points = [(x, f(x)) for x in range(start, end)]  # List of points
 
-        point_square = self.get_point_square(self.thickness)
+        point_square = self.get_point_square(self.thickness)  # Create an identity point-square for the given thickness
         for point in points:
             for point_sq in point_square:
+                # Translate the identity point-square to each point in the point list to create the line
                 win_canvas.data_canvas[
                     (int(point[0] + point_sq[0]), int(point[1] + point_sq[1]))] = self.color.to_tuple()
 
 
-class FlipX(Tool):
-    def __init__(self):
-        super(FlipX, self).__init__()
-        pass
+class DumpRaw(Tool):
+    # Dump the raw value of the data canvas, and return it (for testing/debugging)
+    def execute(self, win_canvas):
+        print(str(win_canvas.data_canvas))
+        return win_canvas.data_canvas
 
+
+class FlipX(Tool):
+    # Flip X of all pixels
     def execute(self, win_canvas):
         width, _ = win_canvas.img_fn.size
 
@@ -129,13 +142,8 @@ class FlipX(Tool):
         win_canvas.data_canvas.map(flipx)  # A simple mapping to flip x
 
 
-class DumpRaw(Tool):
-    def execute(self, win_canvas):
-        print(str(win_canvas.data_canvas))
-        return win_canvas.data_canvas
-
-
 class FlipY(Tool):
+    # Flip Y of all pixels
     def __init__(self):
         super(FlipY, self).__init__()
 
@@ -146,10 +154,11 @@ class FlipY(Tool):
             w1, h1 = k
             return (w1, height - h1 - 1), v
 
-        win_canvas.data_canvas.map(flipy)
+        win_canvas.data_canvas.map(flipy)  # Simple mapping to flip y
 
 
 class ColorShift(Tool):
+    # Colorshift the canvas given a color and saturation
     def __init__(self, color, saturation):
         self.color = color
         self.saturation = saturation
@@ -157,25 +166,28 @@ class ColorShift(Tool):
     def execute(self, win_canvas):
         def colorize(k, v):
             return k, RGB("", data=v).colorize(self.color, self.saturation.value).to_tuple()
+        # Map the canvas to another using the colorize function to change each pixel color
         win_canvas.data_canvas.map(colorize)
 
 
 class Rotate(Tool):
+    # Rotate the the image about a center a certain amount of degrees
     def __init__(self, center, degrees):
         self.center = center
         self.degrees = degrees
 
     def execute(self, win_canvas):
         width, height = win_canvas.img_fn.size
-        def rotate(k):
+
+        def rotate(k):  # Rotate key (point)
             return Point(None, data=k).rotate(self.center, self.degrees).to_tuple()
 
-        def clean(k, v):
+        def clean(k, v):  # Clean up the points that aren't within the image bounds
             x, y = k
             if x < 0 or x > width:
                 return False
             elif y < 0 or y > height:
                 return False
             return True
-        win_canvas.data_canvas.rekey(rotate)
-        win_canvas.data_canvas.filter(clean)
+        win_canvas.data_canvas.rekey(rotate)  # Rotate pixels
+        win_canvas.data_canvas.filter(clean)  # Remove the image removed bounds
