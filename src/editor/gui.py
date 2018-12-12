@@ -1,4 +1,5 @@
 import tkinter
+from dict_plus import DictPlus
 from tkinter import Canvas, PhotoImage
 from tkinter import filedialog
 from editor.math import Point, RGB, Percent
@@ -9,6 +10,7 @@ from tkinter.colorchooser import askcolor
 
 class Window(object):
     def __init__(self, console=False):
+        # Only init if we're not in console mode
         self.root = tkinter.Tk() if not console else None
 
         self.win_canvas = WindowCanvas(self.root)
@@ -32,11 +34,12 @@ class WindowCanvas(object):
         self.gui = gui
         self.tk_canvas = Canvas(gui)
         self.tk_canvas_img = PhotoImage(width=WindowCanvas.WIDTH, height=WindowCanvas.HEIGHT)
-        self.img_canvas = None  # ImageDraw.Draw(win_canvas.img_fn)
-        self.data_canvas = None  # LossyDictPlus()
-        self.img_fn = None  # Image.open(self.filename)
+        self.img_canvas = None  # Imagedraw canvas: ImageDraw.Draw(win_canvas.img_fn)
+        self.data_canvas = None  # Data canvas: LossyDictPlus()
+        self.img_fn = None  # Image file handle: Image.open(self.filename)
 
     def setup(self):
+        # Basic gui setup, size, location, title, initializes canvas objects
         self.gui.geometry("{}x{}".format(WindowCanvas.WIDTH, WindowCanvas.HEIGHT))
         self.gui.geometry("+{}+{}".format(int(self.gui.winfo_screenwidth() / 2 - WindowCanvas.WIDTH / 2),
                                           int(self.gui.winfo_screenheight() / 2 - WindowCanvas.HEIGHT / 2)))
@@ -44,31 +47,15 @@ class WindowCanvas(object):
 
         NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self)
 
-
-    def update_img(self, full=False):
+    def update_img(self):
         for p in self.data_canvas:
             self.img_canvas.point(p, self.data_canvas[p])
 
         self.tk_canvas_img = ImageTk.PhotoImage(self.img_fn)
         self.tk_canvas.create_image((WindowCanvas.WIDTH / 2, WindowCanvas.HEIGHT / 2),
                                     image=self.tk_canvas_img, state=tkinter.DISABLED)
+        # TODO Update dict to hooked, add "version control"?
 
-        tw = 2
-        # if self.data_canvas[p] != (255, 255, 255) or full:  # TODO Update dict to hooked, add "version control"?
-        #     self.tk_canvas_img.put('#%02x%02x%02x' % self.data_canvas[p], p)
-        # self.tk_canvas.create_oval(p, p, fill='#%02x%02x%02x' % self.data_canvas[p])
-
-
-# from Tkinter import *
-# import Image, ImageTk
-# root = Tk()
-# root.geometry('1000x1000')
-# canvas = Canvas(root,width=999,height=999)
-# canvas.pack()
-# pilImage = Image.open("ball.gif")
-# image = ImageTk.PhotoImage(pilImage)
-# imagesprite = canvas.create_image(400,400,image=image)
-# root.mainloop()
 
 class ToolBox(object):
     WIDTH = 300
@@ -79,26 +66,25 @@ class ToolBox(object):
         self.root = root
         self.win_canvas = win_canvas
         self.gui = None
-        self.brush_on = False
-        self.brush_txt = tkinter.StringVar()
-        self.brush_txt.set("Paintbrush (Off)")
 
+        self.brush_btns = DictPlus()  # Dict of buttons of brushes, used to disable current brush
         self.line_pt = None  # First clicked point for line tool
         self.saturation = None  # Scale for colorize saturation
         self.brush_size = None  # Scale for brush size
         self.rotation = None    # Scale for rotation
         self.rot_center = None  # Entry for rotation center
 
-    def do_point_paint(self, event):
+    def do_square_paint(self, event):
         point_sq = Line.get_point_square(self.brush_size.get())
+        self.win_canvas.tk_canvas.create_rectangle(event.x, event.y,
+                                                   event.x + self.brush_size.get(),
+                                                   event.y + self.brush_size.get(),
+                                                   outline="#%02x%02x%02x" % ToolBox.COLOR,
+                                                   fill="#%02x%02x%02x" % ToolBox.COLOR,
+                                                   state=tkinter.DISABLED)
         for point in point_sq:
             new_point = (int(event.x + point[0]), int(event.y + point[1]))
             self.win_canvas.data_canvas[new_point] = ToolBox.COLOR
-
-            self.win_canvas.tk_canvas.create_rectangle(new_point[0], new_point[1], new_point[0]+1, new_point[1]+1,
-                                                       outline="#%02x%02x%02x" % ToolBox.COLOR,
-                                                       fill="#%02x%02x%02x" % ToolBox.COLOR,
-                                                       state=tkinter.DISABLED)
 
     def do_circle_paint(self, event):
         Circle(self.brush_size.get(), RGB("", data=ToolBox.COLOR),
@@ -140,35 +126,33 @@ class ToolBox(object):
         NewImage(WindowCanvas.WIDTH, WindowCanvas.HEIGHT).execute(self.win_canvas)
         self.win_canvas.tk_canvas.create_rectangle(0, 0, WindowCanvas.WIDTH, WindowCanvas.HEIGHT, fill="#fff")
 
-    def paintbrush(self):
-        self.brush_on = not self.brush_on
-        if self.brush_on:
-            self.win_canvas.tk_canvas.unbind("<Button-1>")
-            self.brush_txt.set("Paintbrush (On)")
-            self.win_canvas.tk_canvas.bind("<B1-Motion>", self.do_point_paint)
-        else:
-            self.brush_txt.set("Paintbrush (Off)")
-            self.win_canvas.tk_canvas.unbind("<B1-Motion>")
+    def _enable_brushes(self):
+        for k in self.brush_btns:
+            self.brush_btns[k].config(state=tkinter.NORMAL)
+
+    def _rebind_brush(self, brush_name, func, binding_type="<B1-Motion>"):
+        self._enable_brushes()
+        self.brush_btns[brush_name].config(state=tkinter.DISABLED)
+        self.win_canvas.tk_canvas.unbind("<Button-1>")
+        self.win_canvas.tk_canvas.unbind("<B1-Motion>")
+        self.win_canvas.tk_canvas.bind(binding_type, func)
+
+    def draw_square(self):
+        self._rebind_brush("square", self.do_square_paint)
 
     def draw_circle(self):
-        self.win_canvas.tk_canvas.unbind("<Button-1>")
-        if self.brush_on:
-            self.paintbrush()
-        self.win_canvas.tk_canvas.bind("<B1-Motion>", self.do_circle_paint)
+        self._rebind_brush("circle", self.do_circle_paint)
 
     def draw_line(self):
-        self.win_canvas.tk_canvas.unbind("<B1-Motion>")
-        if self.brush_on:
-            self.paintbrush()
-        self.win_canvas.tk_canvas.bind("<Button-1>", self.do_line_paint)
+        self._rebind_brush("line", self.do_line_paint, binding_type="<Button-1>")
 
     def do_flipx(self):
         FlipX().execute(self.win_canvas)
-        self.win_canvas.update_img(full=True)
+        self.win_canvas.update_img()
 
     def do_flipy(self):
         FlipY().execute(self.win_canvas)
-        self.win_canvas.update_img(full=True)
+        self.win_canvas.update_img()
 
     def do_colorize(self):
         color = askcolor()
@@ -188,6 +172,7 @@ class ToolBox(object):
             ToolBox.COLOR = (round(color[0][0]), round(color[0][1]), round(color[0][2]))
 
     def setup(self):
+        # Basic separate window gui setup, set size, location, and title
         self.gui = tkinter.Toplevel(self.root)
         self.gui.geometry("{}x{}".format(ToolBox.WIDTH, ToolBox.HEIGHT))
         self.gui.geometry(
@@ -197,29 +182,42 @@ class ToolBox(object):
 
         frame = tkinter.Frame(self.gui, height=2, bd=1, relief=tkinter.SUNKEN)
 
+        # Brushes
         inner_frame = tkinter.Frame(frame)
-        tkinter.Button(inner_frame, command=self.paintbrush, textvariable=self.brush_txt).pack(side=tkinter.LEFT)
-        tkinter.Button(inner_frame, text="Circle", command=self.draw_circle).pack(side=tkinter.LEFT)
-        tkinter.Button(inner_frame, text="Line", command=self.draw_line).pack(side=tkinter.RIGHT)
+        self.brush_btns["square"] = tkinter.Button(inner_frame, text="Brush", command=self.draw_square)
+        self.brush_btns["square"].pack(side=tkinter.LEFT)
+
+        self.brush_btns["circle"] = tkinter.Button(inner_frame, text="Circle", command=self.draw_circle)
+        self.brush_btns["circle"].pack(side=tkinter.LEFT)
+
+        self.brush_btns["line"] = tkinter.Button(inner_frame, text="Line", command=self.draw_line)
+        self.brush_btns["line"].pack(side=tkinter.RIGHT)
+
+        self.draw_square()  # Set default starting brush to square
         inner_frame.pack()
 
+        # Brush sizer
         inner_frame = tkinter.Frame(frame)
         tkinter.Label(inner_frame, text=str("Brush Size"), textvariable=self.brush_size).pack(side=tkinter.LEFT)
         self.brush_size = tkinter.Scale(inner_frame, from_=1, to=20, orient=tkinter.HORIZONTAL)
+        self.brush_size.set(3)
         self.brush_size.pack(side=tkinter.RIGHT)
         inner_frame.pack()
 
+        # File I/O
         inner_frame = tkinter.Frame(frame)
         tkinter.Button(inner_frame, text="Save", command=self.save_to_file).pack(side=tkinter.LEFT)
         tkinter.Button(inner_frame, text="New Image", command=self.new_image).pack(side=tkinter.RIGHT)
         tkinter.Button(inner_frame, text="Load Image", command=self.load_image).pack(side=tkinter.RIGHT)
         inner_frame.pack()
 
+        # Flip Transforms
         inner_frame = tkinter.Frame(frame)
         tkinter.Button(inner_frame, text="Flip X", command=self.do_flipx).pack(side=tkinter.LEFT)
         tkinter.Button(inner_frame, text="Flip Y", command=self.do_flipy).pack(side=tkinter.RIGHT)
         inner_frame.pack()
 
+        # Colorize Transform
         inner_frame = tkinter.Frame(frame)
         tkinter.Button(inner_frame, text="Colorize", command=self.do_colorize).pack(side=tkinter.LEFT)
         tkinter.Label(inner_frame, text=str("Saturation (%)"), textvariable=self.brush_size).pack(side=tkinter.LEFT)
@@ -227,6 +225,7 @@ class ToolBox(object):
         self.saturation.pack(side=tkinter.RIGHT)
         inner_frame.pack()
 
+        # Rotate Transform
         inner_frame = tkinter.Frame(frame)
         tkinter.Button(inner_frame, text="Rotate", command=self.do_rotate).pack(side=tkinter.LEFT)
         self.rotation = tkinter.Scale(inner_frame, from_=1, to=259, orient=tkinter.HORIZONTAL)
@@ -234,7 +233,9 @@ class ToolBox(object):
         self.rotation.pack(side=tkinter.RIGHT)
         inner_frame.pack()
 
+        # Color picker
         tkinter.Button(frame, text="Pick Color", command=self.do_colorpick).pack()
+
         frame.pack(fill=tkinter.X, padx=5, pady=5)
         frame.update()
 
