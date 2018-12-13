@@ -3,15 +3,15 @@
 ## Planned features to implement
 All **planned** features added, **bonus** features:
 - Pick brush color with color wheel
-- Make Colorize color and saturation pickable
-- Make Rotation pickable
+- Make Colorize color and saturation pick-able
+- Make Rotation pick-able
 - Fix Travis with xvfb (screen virtualization library)
-- Brush size easier to changee
+- Brush size easier to change
 - Fix 'new image' bug (wouldn't clear last buffer)
 - Reorganize UI
 - Optimized brushes and brush selection system
 - Expanded test suite
-- Fully commented code, functions and structure
+- Fully commented code, functions and structures
 
 ##  What was actually accomplished
 Everything!
