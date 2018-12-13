@@ -22,3 +22,7 @@ Nothing, final deadline!
 ## Screenshots
 ### Travis Fixed!
 <img src="images/hw6_travisworks.PNG" />
+
+### New UI, Colorpicker, Sliders, Optimized brush selection
+<img src="images/hw6_colorpicker.PNG" />
+<img src="images/hw6_screencap.gif" />
